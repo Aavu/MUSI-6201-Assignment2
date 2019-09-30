@@ -105,7 +105,7 @@ def get_feature_data(path, blockSize, hopSize):
 
 feature_data = get_feature_data(".", 2048, 2048)
 
-
+#B
 def normalize_zscore(featureData):
 
     row = feature_data.shape[0]

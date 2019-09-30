@@ -6,7 +6,7 @@ from scipy import signal, stats
 # from matplotlib import pyplot as plt
 # TODO Change to scipy wavread
 import librosa
-from tqdm import tqdm
+# from tqdm import tqdm
 
 eps = 1e-6
 
@@ -92,7 +92,7 @@ def get_feature_data(path, blockSize, hopSize):
     files = glob.glob(os.path.join(path, "*.wav"))
     sr = 44100
     ft_data = np.empty((10, len(files)))
-    for i, f in enumerate(tqdm(files)):
+    for i, f in enumerate(files):
         x, _ = librosa.core.load(f, sr=sr, mono=True)
         ft = extract_features(x, blockSize, hopSize, sr)
         agg_ft = aggregate_feature_per_file(ft)

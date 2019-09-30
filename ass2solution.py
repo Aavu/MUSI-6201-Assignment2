@@ -1,6 +1,6 @@
 import os, glob
 import numpy as np
-from scipy import signal
+from scipy import signal, stats
 # import matplotlib
 # matplotlib.use("Qt5Agg")
 # from matplotlib import pyplot as plt
@@ -99,4 +99,11 @@ def get_feature_data(path, blockSize, hopSize):
     return ft_data
 
 
-feature_data = get_feature_data(".", 2048, 2048)
+# B1
+def normalize_zscore(featureData):
+    return stats.zscore(featureData)
+
+
+featureData = get_feature_data(".", 2048, 2048)
+normFeatureMatrix = normalize_zscore(featureData)
+print(normFeatureMatrix)

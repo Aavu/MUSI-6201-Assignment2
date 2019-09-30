@@ -46,7 +46,7 @@ def extract_spectral_centroid(xb, fs):
     v_sc = np.sum(np.arange(K + 1).reshape(1, -1) * X, axis=1) / (np.sum(X, axis=1) + eps) / (K - 1)
     
     #converting to Hz
-    v_sc = v_sc / (X.shape[0] - 1) * fs / 2
+    v_sc = v_sc * fs / 2
     
     return v_sc
 

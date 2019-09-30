@@ -102,7 +102,7 @@ def get_feature_data(path, blockSize, hopSize):
 
 # # B1
 def normalize_zscore(featureData):
-    return stats.zscore(featureData)
+    return (featureData - np.mean(featureData, axis=0))/np.std(featureData, axis=0)
 
 
 # C1
@@ -116,6 +116,7 @@ def visualize_features(path_to_musicspeech, blockSize=1024, hopSize=256):
         ft_matrix.append(ft_data)
         index.append(ft_data)
     ft_matrix = np.vstack((ft_matrix[0], ft_matrix[1]))
-    print(ft_matrix.shape)
+    norm_ft = normalize_zscore(ft_matrix)
+
 
 # visualize_features("music_speech")

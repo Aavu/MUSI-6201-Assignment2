@@ -104,3 +104,18 @@ def get_feature_data(path, blockSize, hopSize):
 
 
 feature_data = get_feature_data(".", 2048, 2048)
+
+
+def normalize_zscore(featureData):
+
+    row = feature_data.shape[0]
+    col = feature_data.shape[1]
+
+    mean = np.mean(feature_data, axis=0, keepdims=True).flatten()
+    mean = np.array([mean,] *row)
+    std_dev = np.std(feature_data, axis=0, keepdims=True).flatten()
+    std_dev = np.array([std_dev,]*row)
+
+    zscore = (feature_data - mean)/std_dev
+
+    return zscore

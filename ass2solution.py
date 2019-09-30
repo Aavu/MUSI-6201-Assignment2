@@ -5,7 +5,8 @@ from scipy import signal, stats
 # matplotlib.use("Qt5Agg")
 # from matplotlib import pyplot as plt
 # TODO Change to scipy wavread
-import librosa
+# import librosa
+from scipy.io.wavfile import read
 # from tqdm import tqdm
 
 eps = 1e-6
@@ -93,7 +94,20 @@ def get_feature_data(path, blockSize, hopSize):
     sr = 44100
     ft_data = np.empty((10, len(files)))
     for i, f in enumerate(files):
-        x, _ = librosa.core.load(f, sr=sr, mono=True)
+        # x, _ = librosa.core.load(f, sr=sr, mono=True)
+        _, x = read(f)
+        if x.dtype == 'float32':
+            audio = x
+        else:
+            if x.dtype == 'uint8':
+                bits = 8
+            elif x.dtype == 'int16':
+                bits = 16
+            elif x.dtype == 'int32':
+                bits = 32
+                
+            audio = x/float(2**(bits-1))
+        
         ft = extract_features(x, blockSize, hopSize, sr)
         agg_ft = aggregate_feature_per_file(ft)
         ft_data[:, i] = agg_ft.flatten()

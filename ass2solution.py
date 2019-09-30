@@ -6,6 +6,7 @@ from scipy import signal, stats
 # from matplotlib import pyplot as plt
 # TODO Change to scipy wavread
 import librosa
+from tqdm import tqdm
 
 eps = 1e-6
 
@@ -44,7 +45,7 @@ def extract_spectral_centroid(xb, fs):
     K = len(xb[1]) // 2
     X, t = stft(xb, fs)
     v_sc = np.sum(np.arange(K + 1).reshape(1, -1) * X, axis=1) / (np.sum(X, axis=1) + eps) / (K - 1)
-    return v_sc
+    return v_sc * fs / 2
 
 
 def extract_rms(xb):
@@ -91,7 +92,7 @@ def get_feature_data(path, blockSize, hopSize):
     files = glob.glob(os.path.join(path, "*.wav"))
     sr = 44100
     ft_data = np.empty((10, len(files)))
-    for i, f in enumerate(files):
+    for i, f in enumerate(tqdm(files)):
         x, _ = librosa.core.load(f, sr=sr, mono=True)
         ft = extract_features(x, blockSize, hopSize, sr)
         agg_ft = aggregate_feature_per_file(ft)
@@ -99,11 +100,22 @@ def get_feature_data(path, blockSize, hopSize):
     return ft_data
 
 
-# B1
+# # B1
 def normalize_zscore(featureData):
     return stats.zscore(featureData)
 
 
-featureData = get_feature_data(".", 2048, 2048)
-normFeatureMatrix = normalize_zscore(featureData)
-print(normFeatureMatrix)
+# C1
+def visualize_features(path_to_musicspeech, blockSize=1024, hopSize=256):
+    folders = ["speech_wav", "music_wav"]
+    index = []
+    ft_matrix = []
+    for folder in folders:
+        path = os.path.join(path_to_musicspeech, folder)
+        ft_data = get_feature_data(path, blockSize, hopSize)
+        ft_matrix.append(ft_data)
+        index.append(ft_data)
+    ft_matrix = np.vstack((ft_matrix[0], ft_matrix[1]))
+    print(ft_matrix.shape)
+
+# visualize_features("music_speech")

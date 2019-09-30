@@ -108,7 +108,7 @@ def get_feature_data(path, blockSize, hopSize):
                 
             audio = x/float(2**(bits-1))
         
-        ft = extract_features(x, blockSize, hopSize, sr)
+        ft = extract_features(audio, blockSize, hopSize, sr)
         agg_ft = aggregate_feature_per_file(ft)
         ft_data[:, i] = agg_ft.flatten()
     return ft_data

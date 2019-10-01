@@ -1,12 +1,12 @@
-import os, glob
+import os
+import glob
 import numpy as np
-from scipy import signal, stats
-# import matplotlib
-# matplotlib.use("Qt5Agg")
-# from matplotlib import pyplot as plt
-# TODO Change to scipy wavread
-# import librosa
+from scipy import signal
+import matplotlib
+matplotlib.use("Qt5Agg")
+from matplotlib import pyplot as plt
 from scipy.io.wavfile import read
+
 # from tqdm import tqdm
 
 eps = 1e-6
@@ -18,16 +18,12 @@ def hann(L):
 
 def stft(xb, fs):
     X = []
-    times = []
-    ind = 0
     K = len(xb[1])
     for n in range(len(xb)):
         f, t, Zxx = signal.stft(xb[n], fs=fs, nperseg=K, noverlap=0, boundary=None, window=hann(K))
         abs_Z = np.abs(Zxx.flatten())
         X.append(abs_Z)
-        times.append(t[0] + ind)
-        ind += len(xb[1])
-    return np.array(X), times
+    return np.array(X)
 
 
 def block_audio(x, blockSize, hopSize, fs):
@@ -44,7 +40,7 @@ def block_audio(x, blockSize, hopSize, fs):
 
 def extract_spectral_centroid(xb, fs):
     K = len(xb[1]) // 2
-    X, t = stft(xb, fs)
+    X = stft(xb, fs)
     v_sc = np.sum(np.arange(K + 1).reshape(1, -1) * X, axis=1) / (np.sum(X, axis=1) + eps) / (K - 1)
     return v_sc * fs / 2
 
@@ -59,12 +55,12 @@ def extract_zerocrossingrate(xb):
 
 
 def extract_spectral_crest(xb):
-    X, _ = stft(xb, 1)
+    X = stft(xb, 1)
     return np.max(X, axis=1) / np.sum(X, axis=1)
 
 
 def extract_spectral_flux(xb):
-    X, _ = stft(xb, 1)
+    X = stft(xb, 1)
     v_sf = np.sqrt(np.sum(np.square(np.diff(X, axis=0)), axis=1)) / (len(xb[1]) / 2)
     v_sf = np.insert(v_sf, 0, 0)
     return v_sf
@@ -81,6 +77,10 @@ def extract_features(x, blockSize, hopSize, fs):
     return np.vstack((v_sc, v_rms, v_zc, v_scf, v_sf))
 
 
+label = {'sc_mean': 0, 'rms_mean': 2, 'zcr_mean': 4, 'scr_mean': 6, 'sf_mean': 8,
+         'sc_std' : 1, 'rms_std': 3, 'zcr_std': 5, 'scr_std': 7, 'sf_std': 9}
+
+
 # A3
 def aggregate_feature_per_file(features):
     mean = np.mean(features, axis=1)
@@ -88,39 +88,45 @@ def aggregate_feature_per_file(features):
     return np.dstack((mean, std)).flatten()
 
 
+def wavread(path):
+    sr, x = read(path)
+    if x.dtype == 'float32':
+        return sr, x
+    elif x.dtype == 'uint8':
+        return sr, (x / 128.) - 1
+    else:
+        bits = x.dtype.itemsize * 8
+        return sr, x / (2 ** (bits - 1))
+
+
 # A4
 def get_feature_data(path, blockSize, hopSize):
     files = glob.glob(os.path.join(path, "*.wav"))
-    sr = 44100
     ft_data = np.empty((10, len(files)))
     for i, f in enumerate(files):
-        # x, _ = librosa.core.load(f, sr=sr, mono=True)
-        _, x = read(f)
-        if x.dtype == 'float32':
-            audio = x
-        else:
-            if x.dtype == 'uint8':
-                bits = 8
-            elif x.dtype == 'int16':
-                bits = 16
-            elif x.dtype == 'int32':
-                bits = 32
-                
-            audio = x/float(2**(bits-1))
-        
+        sr, audio = wavread(f)
         ft = extract_features(audio, blockSize, hopSize, sr)
         agg_ft = aggregate_feature_per_file(ft)
         ft_data[:, i] = agg_ft.flatten()
     return ft_data
 
 
-# # B1
+# B1
 def normalize_zscore(featureData):
-    return (featureData - np.mean(featureData, axis=0))/np.std(featureData, axis=0)
+    return ((featureData.T - np.mean(featureData, axis=1)) / np.std(featureData, axis=1)).T
+
+
+def plot_features(features, index):
+    plots = [['sc_mean', 'scr_mean'], ['sf_mean', 'zcr_mean'], ['rms_mean', 'rms_std'],
+             ['zcr_std', 'scr_std'], ['sc_std', 'sf_std']]
+    for x_axis, y_axis in plots:
+        plt.scatter(features[label[x_axis], :index], features[label[y_axis], :index], c='b')
+        plt.scatter(features[label[x_axis], index:], features[label[y_axis], index:], c='r')
+        plt.show()
 
 
 # C1
-def visualize_features(path_to_musicspeech, blockSize=1024, hopSize=256):
+def visualize_features(path_to_musicspeech, blockSize=1024, hopSize=1024):
     folders = ["speech_wav", "music_wav"]
     index = []
     ft_matrix = []
@@ -128,9 +134,10 @@ def visualize_features(path_to_musicspeech, blockSize=1024, hopSize=256):
         path = os.path.join(path_to_musicspeech, folder)
         ft_data = get_feature_data(path, blockSize, hopSize)
         ft_matrix.append(ft_data)
-        index.append(ft_data)
-    ft_matrix = np.vstack((ft_matrix[0], ft_matrix[1]))
+        index.append(ft_data.shape[1])
+    ft_matrix = np.hstack((ft_matrix[0], ft_matrix[1]))
     norm_ft = normalize_zscore(ft_matrix)
+    plot_features(norm_ft, index[0])
 
 
-# visualize_features("music_speech")
+visualize_features("music_speech")

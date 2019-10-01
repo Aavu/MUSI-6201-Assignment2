@@ -16,13 +16,14 @@ def hann(L):
     return 0.5 - (0.5 * np.cos(2 * np.pi / L * np.arange(L)))
 
 
-def stft(xb, fs):
-    X = []
-    K = len(xb[1])
-    for n in range(len(xb)):
-        f, t, Zxx = signal.stft(xb[n], fs=fs, nperseg=K, noverlap=0, boundary=None, window=hann(K))
-        abs_Z = np.abs(Zxx.flatten())
-        X.append(abs_Z)
+def fft(xb):
+    # X = []
+    # K = len(xb[1])
+    # for n in range(len(xb)):
+    #    f, t, Zxx = signal.stft(xb[n], fs=fs, nperseg=K, noverlap=0, boundary=None, window=hann(K))
+    #    abs_Z = np.abs(Zxx.flatten())
+    #    X.append(abs_Z)
+    X = np.fft.rfft(xb)
     return np.array(X)
 
 
@@ -40,7 +41,7 @@ def block_audio(x, blockSize, hopSize, fs):
 
 def extract_spectral_centroid(xb, fs):
     K = len(xb[1]) // 2
-    X = stft(xb, fs)
+    X = fft(xb)
     v_sc = np.sum(np.arange(K + 1).reshape(1, -1) * X, axis=1) / (np.sum(X, axis=1) + eps) / (K - 1)
     return v_sc * fs / 2
 
@@ -55,12 +56,12 @@ def extract_zerocrossingrate(xb):
 
 
 def extract_spectral_crest(xb):
-    X = stft(xb, 1)
+    X = fft(xb)
     return np.max(X, axis=1) / np.sum(X, axis=1)
 
 
 def extract_spectral_flux(xb):
-    X = stft(xb, 1)
+    X = fft(xb)
     v_sf = np.sqrt(np.sum(np.square(np.diff(X, axis=0)), axis=1)) / (len(xb[1]) / 2)
     v_sf = np.insert(v_sf, 0, 0)
     return v_sf

@@ -121,6 +121,11 @@ def plot_features(features, index):
     plots = [['sc_mean', 'scr_mean'], ['sf_mean', 'zcr_mean'], ['rms_mean', 'rms_std'],
              ['zcr_std', 'scr_std'], ['sc_std', 'sf_std']]
     for x_axis, y_axis in plots:
+        plt.title(x_axis + ' vs ' + y_axis )
+        plt.xlabel(x_axis)
+        plt.ylabel(y_axis)
+        plt.xlim(-5.0, 5.0)
+        plt.ylim(-5.0, 5.0)        
         plt.scatter(features[label[x_axis], :index], features[label[y_axis], :index], c='b')
         plt.scatter(features[label[x_axis], index:], features[label[y_axis], index:], c='r')
         plt.show()

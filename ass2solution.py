@@ -24,7 +24,8 @@ def fft(xb):
     #    abs_Z = np.abs(Zxx.flatten())
     #    X.append(abs_Z)
     X = np.fft.rfft(xb)
-    return np.array(X)
+    abs_X = np.abs(X)
+    return abs_X
 
 
 def block_audio(x, blockSize, hopSize, fs):

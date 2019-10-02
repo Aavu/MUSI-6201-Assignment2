@@ -8,6 +8,6 @@ RMS mean v/s RMS std features provide the best seperation between the speech and
 
 The sf_std v/s sc_std and scr_std v/s zcr_std gives some seperation. But it would be hard to classify just with them as we can see, there are a lot of overlapping datapoints and it is hard to clearly draw a seperating boundary.
 
-For sf_std v/s sc_std plot, sc_std is higher for speech probably because there are more high frequencies compared to music.
+For sf_std v/s sc_std plot, sc_std is higher for speech probably because of presence of syllables like "p", "shh", "ch", etc which creates variations in the spectral centroids.
 
 We dont think scr_mean vs sc_mean and sf_mean vs zcr_mean are good features pairs when used alone as they dont distinguish the data points so well.

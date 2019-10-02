@@ -11,3 +11,10 @@ The sf_std v/s sc_std and scr_std v/s zcr_std gives some seperation. But it woul
 For sf_std v/s sc_std plot, sc_std is higher for speech probably because of presence of syllables like "p", "shh", "ch", etc which creates variations in the spectral centroids.
 
 We dont think scr_mean vs sc_mean and sf_mean vs zcr_mean are good features pairs when used alone as they dont distinguish the data points so well.
+
+Abbreviations:
+sc : Spectral centroid
+rms : Root mean square
+zcr : Zero crossing rate
+scr : Spectral crest
+sf : Spectral flux

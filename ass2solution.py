@@ -1,9 +1,9 @@
 import os
 import glob
 import numpy as np
-import matplotlib
+#import matplotlib
 
-matplotlib.use("Qt5Agg")
+#matplotlib.use("Qt5Agg")
 from matplotlib import pyplot as plt
 from scipy.io.wavfile import read
 

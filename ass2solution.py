@@ -7,27 +7,17 @@ matplotlib.use("Qt5Agg")
 from matplotlib import pyplot as plt
 from scipy.io.wavfile import read
 
-# from tqdm import tqdm
 
 eps = 1e-6
 
 
 def hann(L):
-    return 0.5 - (0.5 * np.cos(2 * np.pi / L * np.arange(L)))
+    return 0.5 - (0.5 * np.cos(2 * np.pi / L * np.arange(L))).reshape(1, -1)
 
 
 def fft(xb):
-    return np.abs(np.fft.rfft(xb, len(xb[1]), axis=1))
-
-
-# def stft(xb, fs):
-#     X = []
-#     K = len(xb[1])
-#     for n in range(len(xb)):
-#         f, t, Zxx = signal.stft(xb[n], fs=fs, nperseg=K, noverlap=0, boundary=None, window=hann(K))
-#         abs_Z = np.abs(Zxx.flatten())
-#         X.append(abs_Z)
-#     return np.array(X)
+    K = len(xb[1])
+    return np.abs(np.fft.rfft(xb*hann(K), K, axis=1))
 
 
 def block_audio(x, blockSize, hopSize, fs):
@@ -50,8 +40,7 @@ def extract_spectral_centroid(xb, fs):
 
 
 def extract_rms(xb):
-    v_rms = np.sqrt((1 / len(xb[1])) * np.sum(np.square(xb), axis=1))
-    return np.maximum(20 * np.log10(v_rms + eps), -100)
+    return np.maximum(20 * np.log10(np.sqrt((1 / len(xb[1])) * np.sum(np.square(xb), axis=1)) + eps), -100)
 
 
 def extract_zerocrossingrate(xb):
@@ -59,16 +48,12 @@ def extract_zerocrossingrate(xb):
 
 
 def extract_spectral_crest(xb):
-    # X = stft(xb, 1)
     X = fft(xb)
     return np.max(X, axis=1) / np.sum(X, axis=1)
 
 
 def extract_spectral_flux(xb):
-    X = fft(xb)
-    v_sf = np.sqrt(np.sum(np.square(np.diff(X, axis=0)), axis=1)) / (len(xb[1]) / 2)
-    v_sf = np.insert(v_sf, 0, 0)
-    return v_sf
+    return np.insert(np.sqrt(np.sum(np.square(np.diff(fft(xb), axis=0)), axis=1)) / (len(xb[1]) / 2), 0, 0)
 
 
 # A2
@@ -88,9 +73,7 @@ label = {'sc_mean': 0, 'rms_mean': 2, 'zcr_mean': 4, 'scr_mean': 6, 'sf_mean': 8
 
 # A3
 def aggregate_feature_per_file(features):
-    mean = np.mean(features, axis=1)
-    std = np.std(features, axis=1)
-    return np.dstack((mean, std)).flatten()
+    return np.dstack((np.mean(features, axis=1), np.std(features, axis=1))).flatten()
 
 
 def wavread(path):

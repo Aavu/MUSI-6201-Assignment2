@@ -11,5 +11,3 @@ The sf_std v/s sc_std and scr_std v/s zcr_std gives some seperation. But it woul
 For sf_std v/s sc_std plot, sc_std is higher for speech probably because there are more high frequencies compared to music.
 
 We dont think scr_mean vs sc_mean and sf_mean vs zcr_mean are good features pairs when used alone as they dont distinguish the data points so well.
-
-But if we had to infer from the plot scr_mean vs sc_mean, we could say that speech seems to have higher SCR values for corresponding SC values, which probably means that speech has a peakier spectrum than music.

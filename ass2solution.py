@@ -1,8 +1,8 @@
 import os
 import glob
 import numpy as np
-from scipy import signal
 import matplotlib
+
 matplotlib.use("Qt5Agg")
 from matplotlib import pyplot as plt
 from scipy.io.wavfile import read
@@ -16,14 +16,18 @@ def hann(L):
     return 0.5 - (0.5 * np.cos(2 * np.pi / L * np.arange(L)))
 
 
-def stft(xb, fs):
-    X = []
-    K = len(xb[1])
-    for n in range(len(xb)):
-        f, t, Zxx = signal.stft(xb[n], fs=fs, nperseg=K, noverlap=0, boundary=None, window=hann(K))
-        abs_Z = np.abs(Zxx.flatten())
-        X.append(abs_Z)
-    return np.array(X)
+def fft(xb):
+    return np.abs(np.fft.rfft(xb, len(xb[1]), axis=1))
+
+
+# def stft(xb, fs):
+#     X = []
+#     K = len(xb[1])
+#     for n in range(len(xb)):
+#         f, t, Zxx = signal.stft(xb[n], fs=fs, nperseg=K, noverlap=0, boundary=None, window=hann(K))
+#         abs_Z = np.abs(Zxx.flatten())
+#         X.append(abs_Z)
+#     return np.array(X)
 
 
 def block_audio(x, blockSize, hopSize, fs):
@@ -40,7 +44,7 @@ def block_audio(x, blockSize, hopSize, fs):
 
 def extract_spectral_centroid(xb, fs):
     K = len(xb[1]) // 2
-    X = stft(xb, fs)
+    X = fft(xb)
     v_sc = np.sum(np.arange(K + 1).reshape(1, -1) * X, axis=1) / (np.sum(X, axis=1) + eps) / (K - 1)
     return v_sc * fs / 2
 
@@ -55,12 +59,13 @@ def extract_zerocrossingrate(xb):
 
 
 def extract_spectral_crest(xb):
-    X = stft(xb, 1)
+    # X = stft(xb, 1)
+    X = fft(xb)
     return np.max(X, axis=1) / np.sum(X, axis=1)
 
 
 def extract_spectral_flux(xb):
-    X = stft(xb, 1)
+    X = fft(xb)
     v_sf = np.sqrt(np.sum(np.square(np.diff(X, axis=0)), axis=1)) / (len(xb[1]) / 2)
     v_sf = np.insert(v_sf, 0, 0)
     return v_sf
@@ -119,14 +124,24 @@ def normalize_zscore(featureData):
 def plot_features(features, index):
     plots = [['sc_mean', 'scr_mean'], ['sf_mean', 'zcr_mean'], ['rms_mean', 'rms_std'],
              ['zcr_std', 'scr_std'], ['sc_std', 'sf_std']]
-    for x_axis, y_axis in plots:
-        plt.scatter(features[label[x_axis], :index], features[label[y_axis], :index], c='b')
-        plt.scatter(features[label[x_axis], index:], features[label[y_axis], index:], c='r')
-        plt.show()
+
+    fig, ax = plt.subplots(3, 2, figsize=(12, 10))
+    l1 = l2 = None
+    for i, (x_axis, y_axis) in enumerate(plots):
+        x = i // 2
+        y = i % 2
+        ax[x, y].set(title=x_axis + ' vs ' + y_axis, xlabel=x_axis, ylabel=y_axis, xlim=(-3, 3.5), ylim=(-3, 6), axisBelow=True)
+        ax[x, y].grid(linestyle='dashed')
+        l1 = ax[x, y].scatter(features[label[x_axis], :index], features[label[y_axis], :index], c='b')
+        l2 = ax[x, y].scatter(features[label[x_axis], index:], features[label[y_axis], index:], c='r')
+    ax[2, 1].remove()
+    fig.legend([l1, l2], ["speech", "music"], loc=4)
+    plt.tight_layout(pad=1)
+    plt.show()
 
 
 # C1
-def visualize_features(path_to_musicspeech, blockSize=1024, hopSize=1024):
+def visualize_features(path_to_musicspeech, blockSize=1024, hopSize=256):
     folders = ["speech_wav", "music_wav"]
     index = []
     ft_matrix = []
